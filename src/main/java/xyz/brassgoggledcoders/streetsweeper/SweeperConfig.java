@@ -11,8 +11,11 @@ public class SweeperConfig {
     @Config.Comment(value = { "Whether or not to try to execute StreetSweeper whenever a world is loaded or saved.",
             "Manual execution is always possible through '/streetsweeper'" })
     public static boolean automatic = true;
-    @Config.Comment(value = { "When false, only OPs may execute the sweeper" })
+    @Config.Comment(value = "When false, only (>Level 2) OPs may execute the sweeper")
     public static boolean anyoneMayExecute = false;
+    @Config.Comment(value = { "If this is enabled, StreetSweeper will block new entities from spawning above the cap.",
+            "(This is disabled by default because it doesn't respect the standard behaviour of killing oldest entities first)" })
+    public static boolean blockNewEntities = false;
     @Config.Comment(value = { "Various options for filtering what entities may be removed by StreetSweeper" })
     public static RemovalOptions removalOptions = new RemovalOptions();
 
