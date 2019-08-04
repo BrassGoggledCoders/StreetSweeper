@@ -17,7 +17,7 @@ buildscript {
 }
 
 repositories {
-    
+    maven { url = "http://dvs1.progwml6.com/files/maven" } 
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
@@ -39,7 +39,8 @@ minecraft {
 }
 
 dependencies {
-
+    deobfCompile "slimeknights:TConstruct:${minecraft_version}-${tinkers_version}"
+    deobfCompile "slimeknights.mantle:Mantle:${mantle_version}"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
