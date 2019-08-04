@@ -41,8 +41,6 @@ public class StreetSweeper {
                         .sorted(new EntityAgeComparator()).filter(new SweepPredicate())
                         .limit((world.loadedEntityList.size() - SweeperConfig.entityLimit))
                         .collect(Collectors.toList());
-                // We can't rely on the size of the list directly because we're flagging
-                // entities for removal next tick
                 for(Entity entity : forRemoval) {
                     world.removeEntity(entity);
                 }
