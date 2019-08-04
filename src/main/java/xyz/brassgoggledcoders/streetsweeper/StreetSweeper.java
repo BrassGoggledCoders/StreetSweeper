@@ -1,9 +1,10 @@
 package xyz.brassgoggledcoders.streetsweeper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
+import org.apache.logging.log4j.Logger;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.util.text.TextComponentString;
@@ -11,6 +12,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
@@ -18,10 +20,13 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 public class StreetSweeper {
 
     public static final String MODID = "streetsweeper";
+    @Instance(MODID)
+    public static StreetSweeper instance;
+    public Logger log;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-
+        log = event.getModLog();
     }
 
     @EventHandler
@@ -30,19 +35,23 @@ public class StreetSweeper {
     }
 
     public static void tryExecute(World world) {
-        int size = world.loadedEntityList.size();
-        if(!world.isRemote && size > SweeperConfig.entityLimit) {
-            List<Entity> forRemoval = Lists.newArrayList(world.loadedEntityList).stream()
-                    .sorted(new EntityAgeComparator()).filter(new SweepPredicate()).collect(Collectors.toList());
-            // We can't rely on the size of the list directly because we're flagging
-            // entities for removal next tick
-            int entitiesRemoved = 0;
-            for(Entity entity : forRemoval) {
-                world.removeEntity(entity);
-                entitiesRemoved++;
+        if(!world.isRemote) {
+            if(world.loadedEntityList.size() > SweeperConfig.entityLimit) {
+                List<Entity> forRemoval = new ArrayList<>(world.loadedEntityList).stream()
+                        .sorted(new EntityAgeComparator()).filter(new SweepPredicate())
+                        .limit((world.loadedEntityList.size() - SweeperConfig.entityLimit))
+                        .collect(Collectors.toList());
+                // We can't rely on the size of the list directly because we're flagging
+                // entities for removal next tick
+                for(Entity entity : forRemoval) {
+                    world.removeEntity(entity);
+                }
+                FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendMessage(
+                        new TextComponentString("Server swept! Removed " + forRemoval.size() + " entities"));
             }
-            FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList()
-                    .sendMessage(new TextComponentString("Server swept! Removed " + entitiesRemoved + " entities"));
+            else {
+                StreetSweeper.instance.log.info("StreetSweeper executed. Nothing to remove.");
+            }
         }
     }
 }

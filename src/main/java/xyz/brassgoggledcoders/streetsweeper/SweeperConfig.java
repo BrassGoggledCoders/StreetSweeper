@@ -14,12 +14,13 @@ public class SweeperConfig {
     public static RemovalOptions removalOptions = new RemovalOptions();
 
     public static class RemovalOptions {
-        public boolean removeLiving = true;
+        public boolean removeLiving = false;
         public boolean removeBosses = false;
         @Config.Comment(value = { "This includes XP orbs" })
         public boolean removeItems = true;
         @Config.Comment(value = { "Tinker's Tools are  considered invulerable" })
         public boolean removeInvulnerable = false;
         public boolean removeNamed = false;
+        public boolean removeMonsters = true;
     }
 }
