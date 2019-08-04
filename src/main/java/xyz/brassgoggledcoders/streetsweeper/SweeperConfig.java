@@ -5,7 +5,8 @@ import net.minecraftforge.common.config.Config;
 @Config(modid = StreetSweeper.MODID)
 public class SweeperConfig {
     @Config.Comment(value = { "The cap on entities in the world.",
-            "When StreetSweeper runs, it will mercilessly remove entities that exceed this cap, beginning with the oldest" })
+            "When StreetSweeper runs, it will mercilessly remove entities that exceed this cap, beginning with the oldest",
+            "This is per-dimension." })
     public static int entityLimit = 1000;
     @Config.Comment(value = { "Whether or not to try to execute StreetSweeper whenever a world is loaded or saved.",
             "Manual execution is always possible through '/streetsweeper'" })
