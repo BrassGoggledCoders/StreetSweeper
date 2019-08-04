@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
-@Mod(modid = StreetSweeper.MODID, name = "StreetSweeper", version = "@VERSION@")
+@Mod(modid = StreetSweeper.MODID, name = "StreetSweeper", version = "@VERSION@", serverSideOnly = true)
 public class StreetSweeper {
 
     public static final String MODID = "streetsweeper";
