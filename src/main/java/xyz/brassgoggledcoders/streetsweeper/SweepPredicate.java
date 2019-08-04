@@ -35,7 +35,7 @@ public class SweepPredicate implements Predicate<Entity> {
         }
         // Then check if it is a generic type
         else if(entity instanceof IMob) {
-            return SweeperConfig.removalOptions.removeMonsters;
+            return SweeperConfig.removalOptions.removeMonsters || SweeperConfig.removalOptions.removeLiving;
         }
         else if(entity instanceof EntityLivingBase) {
             return SweeperConfig.removalOptions.removeLiving;
