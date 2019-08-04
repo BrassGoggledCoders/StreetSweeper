@@ -9,6 +9,7 @@ import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.passive.IAnimals;
 import net.minecraft.entity.player.EntityPlayer;
 
 public class SweepPredicate implements Predicate<Entity> {
@@ -34,10 +35,13 @@ public class SweepPredicate implements Predicate<Entity> {
             return SweeperConfig.removalOptions.removeItems;
         }
         // Then check if it is a generic type
-        else if(entity instanceof IMob) {
-            return SweeperConfig.removalOptions.removeMonsters || SweeperConfig.removalOptions.removeLiving;
-        }
         else if(entity instanceof EntityLivingBase) {
+            if(entity instanceof IMob) {
+                return SweeperConfig.removalOptions.removeMonsters;
+            }
+            else if(entity instanceof IAnimals) {
+                return SweeperConfig.removalOptions.removeAnimals;
+            }
             return SweeperConfig.removalOptions.removeLiving;
         }
         else {
