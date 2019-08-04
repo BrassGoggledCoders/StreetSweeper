@@ -19,22 +19,24 @@ public class SweepPredicate implements Predicate<Entity> {
         if(entity instanceof EntityPlayer) {
             return false;
         }
-        else if(entity instanceof EntityWither || entity instanceof EntityDragon) {
-            return SweeperConfig.removalOptions.removeBosses;
-        }
-        else if(entity instanceof EntityItem || entity instanceof EntityXPOrb) {
-            return SweeperConfig.removalOptions.removeItems;
-        }
+        // Check properties first
         else if(entity.getIsInvulnerable() || entity.isImmuneToFire()) {
             return SweeperConfig.removalOptions.removeInvulnerable;
         }
         else if(!entity.getCustomNameTag().isEmpty()) {
             return SweeperConfig.removalOptions.removeNamed;
         }
+        // Then check if is a specific type
+        else if(entity instanceof EntityWither || entity instanceof EntityDragon) {
+            return SweeperConfig.removalOptions.removeBosses;
+        }
+        else if(entity instanceof EntityItem || entity instanceof EntityXPOrb) {
+            return SweeperConfig.removalOptions.removeItems;
+        }
+        // Then check if it is a generic type
         else if(entity instanceof IMob) {
             return SweeperConfig.removalOptions.removeMonsters;
         }
-        // Least specific to the bottom!
         else if(entity instanceof EntityLivingBase) {
             return SweeperConfig.removalOptions.removeLiving;
         }
