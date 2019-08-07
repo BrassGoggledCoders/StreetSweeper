@@ -31,6 +31,9 @@ public class SweeperConfig {
         public boolean removeNamed = false;
         @Config.Comment(value = { "Remove entities considered hostile" })
         public boolean removeMonsters = true;
-        public boolean removeAnimals = true;
+        public boolean removeAnimals = false;
+        @Config.Comment(value = { "Tamed Wolves/Cats" })
+        public boolean removePets = false;
+        public boolean removeVillagers = false;
     }
 }

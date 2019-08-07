@@ -9,7 +9,7 @@ import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.passive.IAnimals;
+import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.EntityPlayer;
 
 public class SweepPredicate implements Predicate<Entity> {
@@ -27,7 +27,13 @@ public class SweepPredicate implements Predicate<Entity> {
         else if(!entity.getCustomNameTag().isEmpty()) {
             return SweeperConfig.removalOptions.removeNamed;
         }
+        else if(entity instanceof EntityTameable && ((EntityTameable) entity).isTamed()) {
+            return SweeperConfig.removalOptions.removePets;
+        }
         // Then check if is a specific type
+        else if(entity instanceof EntityVillager) {
+            return SweeperConfig.removalOptions.removeVillagers;
+        }
         else if(entity instanceof EntityWither || entity instanceof EntityDragon) {
             return SweeperConfig.removalOptions.removeBosses;
         }
