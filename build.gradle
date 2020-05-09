@@ -6,140 +6,105 @@ buildscript {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "3.+", changing: true
     }
 }
 
-repositories {
-    maven { url = "http://dvs1.progwml6.com/files/maven" } 
-}
+apply plugin: "net.minecraftforge.gradle"
+apply plugin: "maven"
+apply plugin: "java"
+apply plugin: "idea"
 
-apply plugin: 'net.minecraftforge.gradle.forge'
-
-version = getVersion()
-
-group= "${path}"
+version = "${minecraft_version}-" + getVersion()
+group = "${group}"
 archivesBaseName = "${mod_name}"
 
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        name = "forge"
+        url = "http://files.minecraftforge.net/maven"
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
 minecraft {
-    version = "${forge_version}"
+    mappings channel: "snapshot", version: "${mappings_version}"
 
-    mappings = "${mappings_version}"
-    runDir = "run/"
-    useDepAts = true
+    accessTransformer = file('src/main/resources/META-INF/access_transformer.cfg')
 
-    replace "@VERSION@", project.version
-    replaceIn "${mod_name}.java"
+    runs {
+        client {
+            workingDirectory project.file("run")
+            source sourceSets.main
+        }
+
+        server {
+            workingDirectory project.file("run")
+            source sourceSets.main
+        }
+    }
 }
 
 dependencies {
-    deobfCompile "slimeknights:TConstruct:${minecraft_version}-${tinkers_version}"
-    deobfCompile "slimeknights.mantle:Mantle:${mantle_version}"
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+}
+
+task srcJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = "sources"
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+jar {
+    manifest {
+        attributes([
+                "Specification-Title"     : "${title}",
+                "Specification-Vendor"    : "${team}",
+                "Specification-Version"   : "1",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "${version}",
+                "Implementation-Vendor"   : "${team}",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+artifacts {
+    archives javadocJar
+    archives srcJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://" + (System.getenv("local_maven") != null ? System.getenv("local_maven") : System.getenv("bamboo_local_maven")))
+        }
+    }
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-processResources
-{
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
-}
-
-task deobfJar(type: Jar) {
-    from(sourceSets.main.output) {
-        classifier = "deobf"
-    }
-}
-
-artifacts {
-    archives deobfJar
-}
-
-idea {
-    module {
-        inheritOutputDirs = true
-    }
-}
-
-task("uploadJars", dependsOn: "reobf") {
-    description = "uploads JARs"
-    if (System.getenv("bamboo_local_maven") != null) {
-        apply plugin: 'maven'
-        uploadArchives {
-            repositories {
-                mavenDeployer {
-                    repository(url: "file://" + System.getenv("bamboo_local_maven"))
-                    pom {
-                        groupId = project.group
-                        version = project.version
-                        artifactId = project.archivesBaseName
-                        project {
-                            name project.archivesBaseName
-                            packaging 'jar'
-                            description '${mod_name}'
-                            url ''
-                            scm {
-                                url 'https://github.com/BrassGoggledCoders/${mod_name}'
-                                connection 'scm:git:git@github.com:BrassGoggledCoders/${mod_name}.git'
-                                developerConnection 'scm:git:git@github.com:BrassGoggledCoders/${mod_name}.git'
-                            }
-                            issueManagement {
-                                system 'github'
-                                url 'https://github.com/BrassGoggledCoders/${mod_name}/issues'
-                            }
-                            licenses {
-                                license {
-                                    name 'MIT'
-                                    url 'https://github.com/BrassGoggledCoders/${mod_name}/blob/master/LICENSE'
-                                    distribution 'repo'
-                                }
-                            }
-                            developers {
-                                developer {
-                                    id 'SkySom'
-                                    name 'SkySom'
-                                    roles { role 'developer' }
-                                }
-				                developer {
-                                    id 'warlordjones'
-                                    name 'warlordjones'
-                                    roles { role 'developer' }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 String getVersion() {
-    String version = "${minecraft_version}-${mod_version}"
+    String version = "${mod_version}"
     String branch = project.hasProperty("branch") ? project.branch : ""
 
-    if(branch != "") {
+    if (branch != "") {
         version += "-" + branch
 
         String buildNumber = getBuildNumber()
-        if(buildNumber != "") {
+        if (buildNumber != "") {
             version += "." + buildNumber
         }
     }
@@ -149,8 +114,14 @@ String getVersion() {
 
 static String getBuildNumber() {
     String buildNumber = System.getenv("BUILD_NUMBER") != null ? System.getenv("BUILD_NUMBER") : ""
-    if(buildNumber == "") {
-        buildNumber = System.getenv("bamboo_buildNumber") != null ? "." + System.getenv("bamboo_buildNumber") : ""
+    if (buildNumber == "") {
+        buildNumber = System.getenv("bamboo_buildNumber") != null ? System.getenv("bamboo_buildNumber") : ""
     }
     return buildNumber
+}
+
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xmaxerrs" << "10000"
+    }
 }

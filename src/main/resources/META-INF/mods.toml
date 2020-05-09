@@ -1,0 +1,13 @@
+
+modLoader="javafml"
+loaderVersion="[28,29)"
+issueTrackerURL="https://github.com/BrassGoggledCoders/StreetSweeper/issues"
+
+[[mods]]
+    modId="streetsweeper"
+    version="${file.jarVersion}"
+    displayName="StreetSweeper"
+    authors="FreneticScribber"
+    description='''
+        Caps the number of entities in the world
+    '''

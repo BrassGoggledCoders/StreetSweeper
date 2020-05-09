@@ -1,55 +1,86 @@
 package xyz.brassgoggledcoders.streetsweeper;
 
+import net.minecraft.command.Commands;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLClientLaunchProvider;
+import net.minecraftforge.fml.network.FMLNetworkConstants;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.Logger;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-
-@Mod(modid = StreetSweeper.MODID, name = "StreetSweeper", version = "@VERSION@", serverSideOnly = true)
+@Mod(StreetSweeper.MODID)
 public class StreetSweeper {
 
     public static final String MODID = "streetsweeper";
-    @Instance(MODID)
+    public static final Logger LOGGER = LogManager.getLogger(MODID);
     public static StreetSweeper instance;
-    public Logger log;
 
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        log = event.getModLog();
+    public final SweepPredicate sweepPredicate = new SweepPredicate();
+    public final EntityAgeComparator entityAgeComparator = new EntityAgeComparator();
+    public SweeperConfig sweeperConfig;
+
+
+    public StreetSweeper() {
+        instance = this;
+        MinecraftForge.EVENT_BUS.addListener(this::serverStarting);
+        sweeperConfig = new SweeperConfig(new ForgeConfigSpec.Builder());
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, sweeperConfig.spec);
+        NetworkRegistry.newSimpleChannel(new ResourceLocation(MODID, "main"), () -> "1", version -> true, version -> true);
+        ModList.get().getModContainerById(MODID)
+                .ifPresent(mod -> mod.registerExtensionPoint(ExtensionPoint.DISPLAYTEST,
+                        ()-> Pair.of(()-> FMLNetworkConstants.IGNORESERVERONLY, (in, net) -> true)));
     }
 
-    @EventHandler
-    public void serverStarted(FMLServerStartingEvent event) {
-        event.registerServerCommand(new CommandStreetSweeper());
+
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.getCommandDispatcher().register(
+                Commands.literal("streetsweeper")
+                        .requires(commandSource -> StreetSweeper.instance.sweeperConfig.anyoneMayExecute.get() ||
+                                commandSource.hasPermissionLevel(2))
+                        .executes(context -> StreetSweeper.instance.tryExecute(context.getSource().getWorld()))
+        );
     }
 
-    public static void tryExecute(World world) {
-        if(!world.isRemote) {
-            if(world.loadedEntityList.size() > SweeperConfig.entityLimit) {
-                List<Entity> forRemoval = new ArrayList<>(world.loadedEntityList).stream()
-                        .sorted(new EntityAgeComparator()).filter(new SweepPredicate())
-                        .limit((world.loadedEntityList.size() - SweeperConfig.entityLimit))
+    public int tryExecute(IWorld world) {
+        if (!world.isRemote() && world instanceof ServerWorld) {
+            ServerWorld serverWorld = (ServerWorld) world;
+            int entityAmount = serverWorld.entitiesById.size();
+            if (entityAmount > sweeperConfig.entityLimit.get()) {
+                List<Entity> forRemoval = new ArrayList<>(serverWorld.entitiesById.values())
+                        .stream()
+                        .filter(sweepPredicate)
+                        .sorted(entityAgeComparator)
+                        .limit(entityAmount - sweeperConfig.entityLimit.get())
                         .collect(Collectors.toList());
-                for(Entity entity : forRemoval) {
-                    world.removeEntity(entity);
+                for (Entity entity : forRemoval) {
+                    serverWorld.removeEntity(entity);
                 }
-                FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendMessage(
-                        new TextComponentString("Server swept! Removed " + forRemoval.size() + " entities"));
-            }
-            else {
-                StreetSweeper.instance.log.info("StreetSweeper executed. Nothing to remove.");
+                serverWorld.getServer().getPlayerList().sendMessage(
+                        new StringTextComponent("Server swept! Removed " + forRemoval.size() + " entities"));
+                return forRemoval.size();
+            } else {
+                LOGGER.info("StreetSweeper executed. Nothing to remove.");
+                return 0;
             }
         }
+        return 0;
     }
 }
