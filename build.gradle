@@ -125,3 +125,9 @@ gradle.projectsEvaluated {
         options.compilerArgs << "-Xmaxerrs" << "10000"
     }
 }
+
+jar {
+    manifest {
+        attributes 'FMLAT': 'access_transformer.cfg'
+    }
+}
