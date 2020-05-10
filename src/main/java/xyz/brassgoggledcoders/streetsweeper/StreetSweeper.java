@@ -1,5 +1,9 @@
 package xyz.brassgoggledcoders.streetsweeper;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
@@ -14,8 +18,6 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLClientLaunchProvider;
 import net.minecraftforge.fml.network.FMLNetworkConstants;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,8 +25,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.Map;
 
 @Mod(StreetSweeper.MODID)
 public class StreetSweeper {
@@ -46,7 +48,7 @@ public class StreetSweeper {
         NetworkRegistry.newSimpleChannel(new ResourceLocation(MODID, "main"), () -> "1", version -> true, version -> true);
         ModList.get().getModContainerById(MODID)
                 .ifPresent(mod -> mod.registerExtensionPoint(ExtensionPoint.DISPLAYTEST,
-                        ()-> Pair.of(()-> FMLNetworkConstants.IGNORESERVERONLY, (in, net) -> true)));
+                        () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (in, net) -> true)));
     }
 
 
@@ -64,14 +66,23 @@ public class StreetSweeper {
             ServerWorld serverWorld = (ServerWorld) world;
             int entityAmount = serverWorld.entitiesById.size();
             if (entityAmount > sweeperConfig.entityLimit.get()) {
-                List<Entity> forRemoval = new ArrayList<>(serverWorld.entitiesById.values())
+                @SuppressWarnings("UnstableApiUsage")
+                Multimap<String, Entity> forRemoval = new ArrayList<>(serverWorld.entitiesById.values())
                         .stream()
                         .filter(sweepPredicate)
                         .sorted(entityAgeComparator)
                         .limit(entityAmount - sweeperConfig.entityLimit.get())
-                        .collect(Collectors.toList());
-                for (Entity entity : forRemoval) {
-                    serverWorld.removeEntity(entity);
+                        .collect(Multimaps.toMultimap(
+                                entity -> entity.chunkCoordX + " " + entity.chunkCoordZ,
+                                entity -> entity,
+                                () -> Multimaps.newSetMultimap(Maps.newHashMap(), Sets::newHashSet)
+                        ));
+                for (Map.Entry<String, Collection<Entity>> entities : forRemoval.asMap().entrySet()) {
+                    for (Entity entity : entities.getValue()) {
+                        serverWorld.removeEntity(entity);
+                    }
+                    LOGGER.info("Server swept {} entities at Chunk Pos {}", entities.getValue().size(),
+                            entities.getKey());
                 }
                 serverWorld.getServer().getPlayerList().sendMessage(
                         new StringTextComponent("Server swept! Removed " + forRemoval.size() + " entities"));
