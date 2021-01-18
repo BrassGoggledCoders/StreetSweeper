@@ -1,7 +1,7 @@
-
 modLoader="javafml"
-loaderVersion="[28,29)"
+loaderVersion="[35,)"
 issueTrackerURL="https://github.com/BrassGoggledCoders/StreetSweeper/issues"
+license="MIT"
 
 [[mods]]
     modId="streetsweeper"

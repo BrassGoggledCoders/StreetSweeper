@@ -1,8 +1,10 @@
 package xyz.brassgoggledcoders.streetsweeper;
 
+import net.minecraft.command.Commands;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.world.WorldEvent;
