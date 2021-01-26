@@ -9,6 +9,7 @@ import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 
 import java.util.function.Predicate;
 
@@ -21,20 +22,29 @@ public class SweepPredicate implements Predicate<Entity> {
         if (entity instanceof PlayerEntity) {
             return false;
         }
-        else if (removalOptions.keepInvulnerables.get() && entity.isInvulnerable()) {
-            return false;
+        if(entity.getType().getTags().contains(StreetSweeper.SWEEPABLES.getName())) {
+            if (removalOptions.keepInvulnerables.get() && entity.isInvulnerable()) {
+                return false;
+            }
+            if (removalOptions.keepBosses.get() && !entity.isNonBoss()) {
+                return false;
+            }
+            if (removalOptions.keepNamed.get() && entity.hasCustomName()) {
+                return false;
+            }
+            if (removalOptions.keepPets.get() && entity instanceof TameableEntity && ((TameableEntity) entity).isTamed()) {
+                return false;
+            }
+            if (entity instanceof ItemEntity) {
+                ItemStack item = ((ItemEntity) entity).getItem();
+                if (removalOptions.keepNBTItems.get() && item.hasTag()) {
+                    return false;
+                } else {
+                    return !item.getItem().getTags().contains(StreetSweeper.DONT_SWEEP.getName());
+                }
+            }
+            return true;
         }
-        else if (removalOptions.keepBosses.get() && !entity.isNonBoss()) {
-            return false;
-        }
-        else if (removalOptions.keepNamed.get() && entity.hasCustomName()) {
-            return false;
-        }
-        else if (removalOptions.keepPets.get() && entity instanceof TameableEntity && ((TameableEntity) entity).isTamed()) {
-            return false;
-        }
-        else {
-            return entity.getType().getTags().contains(StreetSweeper.SWEEPABLES.getName());
-        }
+        return false;
     }
 }

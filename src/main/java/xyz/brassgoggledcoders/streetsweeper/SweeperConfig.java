@@ -34,7 +34,7 @@ public class SweeperConfig {
     }
 
     public static class RemovalOptions {
-        public final BooleanValue keepPets, keepBosses, keepInvulnerables, keepNamed;
+        public final BooleanValue keepPets, keepBosses, keepInvulnerables, keepNamed, keepNBTItems;
 
         public RemovalOptions(ForgeConfigSpec.Builder configBuilder) {
             keepBosses = configBuilder.define("keepBosses", true);
@@ -42,6 +42,7 @@ public class SweeperConfig {
                     .define("keepInvulerables", true);
             keepPets = configBuilder.define("keepTamedAnimals", true);
             keepNamed = configBuilder.define("keepNamed", true);
+            keepNBTItems = configBuilder.define("keepNBTItems", true);
         }
     }
 }

@@ -7,8 +7,10 @@ import com.google.common.collect.Sets;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.item.Item;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ITag;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IWorld;
@@ -42,6 +44,7 @@ public class StreetSweeper {
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     public static StreetSweeper instance;
     public static final ITag.INamedTag<EntityType<?>> SWEEPABLES = EntityTypeTags.getTagById(MODID + ":sweepables");
+    public static final ITag.INamedTag<Item> DONT_SWEEP = ItemTags.makeWrapperTag(MODID + ":unsweepable_items");
 
     public final SweepPredicate sweepPredicate = new SweepPredicate();
     public final EntityAgeComparator entityAgeComparator = new EntityAgeComparator();
