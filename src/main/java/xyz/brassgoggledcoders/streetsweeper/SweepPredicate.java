@@ -24,7 +24,10 @@ public class SweepPredicate implements Predicate<Entity> {
         else if (removalOptions.keepInvulnerables.get() && entity.isInvulnerable()) {
             return false;
         }
-        else if (removalOptions.keepBosses.get() && entity.hasCustomName()) {
+        else if (removalOptions.keepBosses.get() && !entity.isNonBoss()) {
+            return false;
+        }
+        else if (removalOptions.keepNamed.get() && entity.hasCustomName()) {
             return false;
         }
         else if (removalOptions.keepPets.get() && entity instanceof TameableEntity && ((TameableEntity) entity).isTamed()) {

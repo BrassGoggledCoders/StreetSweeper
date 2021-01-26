@@ -34,13 +34,14 @@ public class SweeperConfig {
     }
 
     public static class RemovalOptions {
-        public final BooleanValue keepPets, keepBosses, keepInvulnerables;
+        public final BooleanValue keepPets, keepBosses, keepInvulnerables, keepNamed;
 
         public RemovalOptions(ForgeConfigSpec.Builder configBuilder) {
             keepBosses = configBuilder.define("keepBosses", true);
             keepInvulnerables = configBuilder.comment("ex: Tinker's Tools are  considered invulnerable")
                     .define("keepInvulerables", true);
             keepPets = configBuilder.define("keepTamedAnimals", true);
+            keepNamed = configBuilder.define("keepNamed", true);
         }
     }
 }
