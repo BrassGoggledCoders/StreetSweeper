@@ -12,7 +12,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber(modid = StreetSweeper.MODID)
-public class EventHandlerSS {
+public class SSEventHandler {
     @SubscribeEvent
     public static void onWorldLoad(WorldEvent.Load event) {
         if (StreetSweeper.instance.sweeperConfig.automatic.get()) {

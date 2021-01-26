@@ -6,6 +6,9 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.tags.ITag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IWorld;
@@ -19,6 +22,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.network.FMLNetworkConstants;
 import net.minecraftforge.fml.network.NetworkRegistry;
@@ -37,17 +41,19 @@ public class StreetSweeper {
     public static final String MODID = "streetsweeper";
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     public static StreetSweeper instance;
+    public static final ITag.INamedTag<EntityType<?>> SWEEPABLES = EntityTypeTags.getTagById(MODID + ":sweepables");
 
     public final SweepPredicate sweepPredicate = new SweepPredicate();
     public final EntityAgeComparator entityAgeComparator = new EntityAgeComparator();
     public SweeperConfig sweeperConfig;
 
-
     public StreetSweeper() {
         instance = this;
         MinecraftForge.EVENT_BUS.addListener(this::serverStarting);
+        MinecraftForge.EVENT_BUS.addListener(this::gatherData);
         sweeperConfig = new SweeperConfig(new ForgeConfigSpec.Builder());
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, sweeperConfig.spec);
+        //Server side only
         ModList.get().getModContainerById(MODID)
                 .ifPresent(mod -> mod.registerExtensionPoint(ExtensionPoint.DISPLAYTEST,
                         () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (in, net) -> true)));
@@ -92,5 +98,9 @@ public class StreetSweeper {
             }
         }
         return 0;
+    }
+
+    public void gatherData(GatherDataEvent event) {
+        event.getGenerator().addProvider(new SSTagProvider(event.getGenerator(), event.getExistingFileHelper()));
     }
 }

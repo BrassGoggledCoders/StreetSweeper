@@ -50,6 +50,24 @@ minecraft {
             workingDirectory project.file("run")
             source sourceSets.main
         }
+        data {
+            workingDirectory project.file("run")
+
+            environment 'target', 'fmluserdevdata'
+
+            properties 'fml.earlyprogresswindow': 'false'
+            properties 'mixin.env.disableRefMap': 'true'
+
+            args '--all', '--output', file('src/generated/resources/'),
+                    '--reports',
+                    '--mod', 'streetsweeper', '--existing', sourceSets.main.resources.srcDirs[0]
+
+            mods {
+                streetsweeper {
+                    source(sourceSets.main)
+                }
+            }
+        }
     }
 }
 
