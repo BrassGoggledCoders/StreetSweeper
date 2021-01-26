@@ -18,7 +18,7 @@ public class SweeperConfig {
         entityLimit = configBuilder.comment("The cap on entities in the world.",
                 "When StreetSweeper runs, it will mercilessly remove entities that exceed this cap, beginning with the oldest",
                 "This is per-dimension.")
-                .defineInRange("entityLimit", 3000, 0, Integer.MAX_VALUE);
+                .defineInRange("entityLimit", 1000, 0, Integer.MAX_VALUE);
         automatic = configBuilder.comment("Whether or not to try to execute StreetSweeper whenever a world is loaded or saved.",
                 "Manual execution is always possible through '/streetsweeper'")
                 .define("automatic", true);

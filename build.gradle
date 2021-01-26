@@ -32,8 +32,15 @@ repositories {
     }
 }
 
-test {
-    useJUnitPlatform()
+sourceSets {
+    main {
+        resources {
+            include '**/**'
+            exclude '**/*.bbmodel'
+            srcDirs += "$rootDir/src/generated/resources"
+            exclude '.cache'
+        }
+    }
 }
 
 minecraft {
@@ -44,12 +51,21 @@ minecraft {
     runs {
         client {
             workingDirectory project.file("run")
-            source sourceSets.main
+            mods {
+                streetsweeper {
+                    source(sourceSets.main)
+                }
+            }
         }
         server {
             workingDirectory project.file("run")
-            source sourceSets.main
+            mods {
+                streetsweeper {
+                    source(sourceSets.main)
+                }
+            }
         }
+
         data {
             workingDirectory project.file("run")
 

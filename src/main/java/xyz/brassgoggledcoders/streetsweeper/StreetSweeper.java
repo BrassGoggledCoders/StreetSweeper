@@ -49,7 +49,7 @@ public class StreetSweeper {
 
     public StreetSweeper() {
         instance = this;
-        MinecraftForge.EVENT_BUS.addListener(this::serverStarting);
+        MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::gatherData);
         sweeperConfig = new SweeperConfig(new ForgeConfigSpec.Builder());
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, sweeperConfig.spec);
@@ -59,8 +59,8 @@ public class StreetSweeper {
                         () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (in, net) -> true)));
     }
 
-    public void serverStarting(FMLServerStartingEvent event) {
-        event.getServer().getCommandManager().getDispatcher().register(
+    public void registerCommands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(
             Commands.literal("streetsweeper")
                     .requires(commandSource -> StreetSweeper.instance.sweeperConfig.anyoneMayExecute.get() ||
                             commandSource.hasPermissionLevel(2))
