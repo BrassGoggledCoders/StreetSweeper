@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import net.minecraft.command.Commands;
 import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.entity.Entity;
@@ -64,21 +65,22 @@ public class StreetSweeper {
                     .requires(commandSource -> StreetSweeper.instance.sweeperConfig.anyoneMayExecute.get() ||
                             commandSource.hasPermissionLevel(2))
                     .executes(context -> StreetSweeper.instance.tryExecute(context.getSource().getWorld()))
+                    .then(Commands.literal("count").executes(context -> (int) context.getSource().getWorld().getEntities().count()))
         );
     }
 
     public int tryExecute(IWorld world) {
         if (!world.isRemote() && world instanceof ServerWorld) {
             ServerWorld serverWorld = (ServerWorld) world;
-            int entityAmount = serverWorld.entitiesById.size();
+            int entityAmount = (int) serverWorld.getEntities().count();
             int entityLimit = sweeperConfig.entityLimit.get();
             if (entityAmount > entityLimit) {
                 @SuppressWarnings("UnstableApiUsage")
                 Multimap<String, Entity> forRemoval = serverWorld.getEntities()
+                        .limit(entityAmount - entityLimit)
                         .filter(sweepPredicate)
                         .sorted(preferItemsComparator)
                         .sorted(entityAgeComparator)
-                        .limit(entityAmount - entityLimit)
                         .collect(Multimaps.toMultimap(
                                 entity -> entity.chunkCoordX + " " + entity.chunkCoordZ,
                                 entity -> entity,

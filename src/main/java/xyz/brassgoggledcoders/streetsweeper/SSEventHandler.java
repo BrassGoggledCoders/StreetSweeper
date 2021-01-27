@@ -30,7 +30,7 @@ public class SSEventHandler {
     @SubscribeEvent
     public static void onSpawned(EntityJoinWorldEvent event) {
         if (event.getWorld() instanceof ServerWorld && StreetSweeper.instance.sweeperConfig.blockNewEntities.get() &&
-                ((ServerWorld) event.getWorld()).entitiesById.size() >= StreetSweeper.instance.sweeperConfig.entityLimit.get()) {
+                ((ServerWorld) event.getWorld()).getEntities().count() >= StreetSweeper.instance.sweeperConfig.entityLimit.get()) {
             event.setCanceled(true);
         }
     }
@@ -38,8 +38,7 @@ public class SSEventHandler {
     @SubscribeEvent
     public static void onItemToss(ItemTossEvent event) {
         World world = event.getPlayer().world;
-        if (world instanceof ServerWorld && StreetSweeper.instance.sweeperConfig.blockNewEntities.get() &&
-                ((ServerWorld) world).entitiesById.size() >= StreetSweeper.instance.sweeperConfig.entityLimit.get()) {
+        if (world instanceof ServerWorld && ((ServerWorld) world).getEntities().count() >= StreetSweeper.instance.sweeperConfig.entityLimit.get()) {
             event.getPlayer().inventory.addItemStackToInventory(event.getEntityItem().getItem());
             event.getPlayer().sendStatusMessage(new StringTextComponent("The amount of entities in the world is " +
                             "currently above the cap. Your items have been returned to prevent them being deleted"),
