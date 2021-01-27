@@ -23,6 +23,7 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.FMLNetworkConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -49,7 +50,7 @@ public class StreetSweeper {
     public StreetSweeper() {
         instance = this;
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
-        MinecraftForge.EVENT_BUS.addListener(this::gatherData);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::gatherData);
         sweeperConfig = new SweeperConfig(new ForgeConfigSpec.Builder());
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, sweeperConfig.spec);
         //Server side only
@@ -74,8 +75,7 @@ public class StreetSweeper {
             int entityLimit = sweeperConfig.entityLimit.get();
             if (entityAmount > entityLimit) {
                 @SuppressWarnings("UnstableApiUsage")
-                Multimap<String, Entity> forRemoval = new ArrayList<>(serverWorld.entitiesById.values())
-                        .stream()
+                Multimap<String, Entity> forRemoval = serverWorld.getEntities()
                         .filter(sweepPredicate)
                         .sorted(preferItemsComparator)
                         .sorted(entityAgeComparator)
@@ -102,7 +102,7 @@ public class StreetSweeper {
     }
 
     public void gatherData(GatherDataEvent event) {
-        event.getGenerator().addProvider(new SSTagsProvider.SSEntityTagsProvider(event.getGenerator(), event.getExistingFileHelper()));
-        event.getGenerator().addProvider(new SSTagsProvider.SSItemTagsProvider(event.getGenerator(), new BlockTagsProvider(event.getGenerator()), event.getExistingFileHelper()));
+        event.getGenerator().addProvider(new SSEntityTagsProvider(event.getGenerator(), event.getExistingFileHelper()));
+        event.getGenerator().addProvider(new SSItemTagsProvider(event.getGenerator(), new BlockTagsProvider(event.getGenerator()), event.getExistingFileHelper()));
     }
 }
