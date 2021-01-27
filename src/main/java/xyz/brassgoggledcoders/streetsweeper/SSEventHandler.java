@@ -34,16 +34,4 @@ public class SSEventHandler {
             event.setCanceled(true);
         }
     }
-
-    @SubscribeEvent
-    public static void onItemToss(ItemTossEvent event) {
-        World world = event.getPlayer().world;
-        if (world instanceof ServerWorld && ((ServerWorld) world).getEntities().count() >= StreetSweeper.instance.sweeperConfig.entityLimit.get()) {
-            event.getPlayer().inventory.addItemStackToInventory(event.getEntityItem().getItem());
-            event.getPlayer().sendStatusMessage(new StringTextComponent("The amount of entities in the world is " +
-                            "currently above the cap. Your items have been returned to prevent them being deleted"),
-                    true);
-            event.setCanceled(true);
-        }
-    }
 }

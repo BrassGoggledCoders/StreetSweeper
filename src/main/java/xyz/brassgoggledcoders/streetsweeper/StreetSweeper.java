@@ -13,6 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -32,6 +33,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Mod(StreetSweeper.MODID)
 public class StreetSweeper {
@@ -65,7 +67,6 @@ public class StreetSweeper {
                     .requires(commandSource -> StreetSweeper.instance.sweeperConfig.anyoneMayExecute.get() ||
                             commandSource.hasPermissionLevel(2))
                     .executes(context -> StreetSweeper.instance.tryExecute(context.getSource().getWorld()))
-                    .then(Commands.literal("count").executes(context -> (int) context.getSource().getWorld().getEntities().count()))
         );
     }
 
@@ -77,9 +78,13 @@ public class StreetSweeper {
             if (entityAmount > entityLimit) {
                 @SuppressWarnings("UnstableApiUsage")
                 Multimap<String, Entity> forRemoval = serverWorld.getEntities()
+                        //If total number of entities in world is above the cap
                         .limit(entityAmount - entityLimit)
+                        //Filter by things we are allowed to sweep
                         .filter(sweepPredicate)
+                        //Prefer Items
                         .sorted(preferItemsComparator)
+                        //Prefer older entities
                         .sorted(entityAgeComparator)
                         .collect(Multimaps.toMultimap(
                                 entity -> entity.chunkCoordX + " " + entity.chunkCoordZ,
@@ -91,8 +96,6 @@ public class StreetSweeper {
                     LOGGER.info("Server swept {} entities at Chunk Pos {}", entities.getValue().size(),
                             entities.getKey());
                 }
-                //serverWorld.getServer().sendMessage(
-                //        new StringTextComponent("Server swept! Removed " + forRemoval.size() + " entities"), UUID.fromString(MODID));
                 return forRemoval.size();
             } else {
                 LOGGER.info("StreetSweeper executed. Nothing to remove.");
