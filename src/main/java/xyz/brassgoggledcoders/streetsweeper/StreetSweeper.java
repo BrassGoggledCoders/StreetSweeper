@@ -43,6 +43,7 @@ public class StreetSweeper {
 
     public final SweepPredicate sweepPredicate = new SweepPredicate();
     public final EntityAgeComparator entityAgeComparator = new EntityAgeComparator();
+    public final PreferItemsComparator preferItemsComparator = new PreferItemsComparator();
     public SweeperConfig sweeperConfig;
 
     public StreetSweeper() {
@@ -70,13 +71,15 @@ public class StreetSweeper {
         if (!world.isRemote() && world instanceof ServerWorld) {
             ServerWorld serverWorld = (ServerWorld) world;
             int entityAmount = serverWorld.entitiesById.size();
-            if (entityAmount > sweeperConfig.entityLimit.get()) {
+            int entityLimit = sweeperConfig.entityLimit.get();
+            if (entityAmount > entityLimit) {
                 @SuppressWarnings("UnstableApiUsage")
                 Multimap<String, Entity> forRemoval = new ArrayList<>(serverWorld.entitiesById.values())
                         .stream()
                         .filter(sweepPredicate)
+                        .sorted(preferItemsComparator)
                         .sorted(entityAgeComparator)
-                        .limit(entityAmount - sweeperConfig.entityLimit.get())
+                        .limit(entityAmount - entityLimit)
                         .collect(Multimaps.toMultimap(
                                 entity -> entity.chunkCoordX + " " + entity.chunkCoordZ,
                                 entity -> entity,

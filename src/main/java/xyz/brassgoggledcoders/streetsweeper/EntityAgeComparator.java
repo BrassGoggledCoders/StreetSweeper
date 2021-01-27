@@ -1,8 +1,8 @@
 package xyz.brassgoggledcoders.streetsweeper;
 
-import java.util.Comparator;
-
 import net.minecraft.entity.Entity;
+
+import java.util.Comparator;
 
 public class EntityAgeComparator implements Comparator<Entity> {
     @Override
